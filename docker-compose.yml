@@ -1,0 +1,21 @@
+services:
+    postgres:
+        image: postgres:16
+        container_name: vehicle_service_db
+        environment:
+            POSTGRES_DB: vehicle_service_management
+            POSTGRES_USER: vehicle_service_user
+            POSTGRES_PASSWORD: vehicle_service_pass
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U vehicle_service_user -d vehicle_service_management"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+volumes:
+    postgres_data:
+        driver: local
