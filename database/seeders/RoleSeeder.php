@@ -3,15 +3,16 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RoleSeeder extends Seeder
 {
     public function run(): void
     {
         // Reset cached roles/permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
             'manage-customers',
@@ -23,6 +24,8 @@ class RoleSeeder extends Seeder
             'view-dashboard',
             'view-own-jobs',
             'update-job-status',
+            'view-own-bookings',
+            'view-own-vehicles',
         ];
 
         foreach ($permissions as $permission) {
@@ -45,6 +48,12 @@ class RoleSeeder extends Seeder
         $mechanic->syncPermissions([
             'view-own-jobs',
             'update-job-status',
+        ]);
+
+        $customer = Role::firstOrCreate(['name' => 'customer']);
+        $customer->syncPermissions([
+            'view-own-bookings',
+            'view-own-vehicles',
         ]);
     }
 }

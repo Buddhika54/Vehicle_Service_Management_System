@@ -26,5 +26,11 @@ class UserSeeder extends Seeder
             ['name' => 'Mechanic User', 'password' => bcrypt('password')]
         );
         $mechanic->assignRole('mechanic');
+
+        $customer = User::firstOrCreate(
+            ['email' => 'customer@test.com'],
+            ['name' => 'Test Customer', 'password' => bcrypt('password')]
+        );
+        $customer->assignRole('customer');
     }
 }
