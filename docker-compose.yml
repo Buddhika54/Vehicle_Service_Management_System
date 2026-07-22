@@ -1,21 +1,53 @@
 services:
+    laravel.test:
+        build:
+            context: ./vendor/laravel/sail/runtimes/8.5
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        image: sail-8.5/app
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        ports:
+            - '${APP_PORT:-80}:80'
+            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            - postgres
     postgres:
-        image: postgres:16
+        image: 'postgres:16'
         container_name: vehicle_service_db
+        networks:
+            - sail
         environment:
             POSTGRES_DB: vehicle_service_management
             POSTGRES_USER: vehicle_service_user
             POSTGRES_PASSWORD: vehicle_service_pass
         ports:
-            - "5432:5432"
+            - '5432:5432'
         volumes:
-            - postgres_data:/var/lib/postgresql/data
+            - 'postgres_data:/var/lib/postgresql/data'
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U vehicle_service_user -d vehicle_service_management"]
+            test:
+                - CMD-SHELL
+                - 'pg_isready -U vehicle_service_user -d vehicle_service_management'
             interval: 10s
             timeout: 5s
             retries: 5
-
+    
 volumes:
     postgres_data:
         driver: local
+    sail-pgsql:
+        driver: local
+networks:
+    sail:
+        driver: bridge
