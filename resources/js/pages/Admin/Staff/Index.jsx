@@ -2,7 +2,9 @@ import { Head, Link, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 
-export default function StaffIndex({ staff }) {
+export default function StaffIndex({ staff = [] }) {
+    const staffList = Array.isArray(staff) ? staff : (staff?.data || []);
+
     const [showModal, setShowModal] = useState(false);
     const [editingStaff, setEditingStaff] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -116,7 +118,7 @@ export default function StaffIndex({ staff }) {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {staff.map((staffMember) => (
+                            {staffList.map((staffMember) => (
                                 <tr key={staffMember.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm font-medium text-gray-900">
@@ -154,7 +156,7 @@ export default function StaffIndex({ staff }) {
                                     </td>
                                 </tr>
                             ))}
-                            {staff.length === 0 && (
+                            {staffList.length === 0 && (
                                 <tr>
                                     <td
                                         colSpan="5"

@@ -27,6 +27,16 @@ class Vehicle extends Model
     /** @use HasFactory<VehicleFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'customer_id',
+        'registration_no',
+        'make',
+        'model',
+        'year',
+        'vin',
+        'mileage',
+    ];
+
     /**
      * Get the attributes that should be cast.
      *

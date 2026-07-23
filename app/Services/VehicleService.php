@@ -43,6 +43,21 @@ class VehicleService
         });
     }
 
+    public function createVehicleForCustomer(int $customerId, array $data): Vehicle
+    {
+        return DB::transaction(function () use ($customerId, $data) {
+            return Vehicle::create([
+                'customer_id' => $customerId,
+                'registration_no' => strtoupper($data['registration_no']),
+                'make' => $data['make'],
+                'model' => $data['model'],
+                'year' => (int) $data['year'],
+                'vin' => isset($data['vin']) && filled($data['vin']) ? strtoupper($data['vin']) : null,
+                'mileage' => (int) ($data['mileage'] ?? 0),
+            ]);
+        });
+    }
+
     public function updateVehicle(Vehicle $vehicle, array $data): Vehicle
     {
         return DB::transaction(function () use ($vehicle, $data) {

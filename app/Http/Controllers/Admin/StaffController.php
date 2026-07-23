@@ -26,10 +26,10 @@ class StaffController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'role' => $user->roles->first()->name ?? null,
-                    'created_at' => $user->created_at->format('M d, Y'),
+                    'role' => $user->roles->first()?->name ?? 'admin',
+                    'created_at' => $user->created_at?->format('M d, Y') ?? '',
                 ];
-            }),
+            })->values(),
         ]);
     }
 

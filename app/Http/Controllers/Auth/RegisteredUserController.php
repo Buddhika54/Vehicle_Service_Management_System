@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -37,13 +38,30 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        $user = DB::transaction(function () use ($request) {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => $request->password,
+            ]);
 
-        $user->assignRole('customer');
+            $user->assignRole('customer');
+
+            $customer = Customer::firstOrCreate(
+                ['email' => $user->email],
+                [
+                    'user_id' => $user->id,
+                    'name' => $user->name,
+                    'phone' => 'Not provided',
+                ]
+            );
+
+            if (! $customer->user_id) {
+                $customer->update(['user_id' => $user->id]);
+            }
+
+            return $user;
+        });
 
         event(new Registered($user));
 

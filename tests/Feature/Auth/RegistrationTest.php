@@ -1,4 +1,8 @@
-<?php
+use Spatie\Permission\Models\Role;
+
+beforeEach(function () {
+    Role::firstOrCreate(['name' => 'customer']);
+});
 
 test('registration screen can be rendered', function () {
     $response = $this->get('/register');

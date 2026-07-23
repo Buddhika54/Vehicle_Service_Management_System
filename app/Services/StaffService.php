@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class StaffService
 {
@@ -14,9 +14,10 @@ class StaffService
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
-                'password' => Hash::make($data['password']),
+                'password' => $data['password'],
             ]);
 
+            Role::findOrCreate($data['role'], 'web');
             $user->assignRole($data['role']);
 
             return $user;
@@ -31,13 +32,14 @@ class StaffService
                 'email' => $data['email'],
             ]);
 
-            if (isset($data['password'])) {
+            if (! empty($data['password'])) {
                 $user->update([
-                    'password' => Hash::make($data['password']),
+                    'password' => $data['password'],
                 ]);
             }
 
             if (isset($data['role'])) {
+                Role::findOrCreate($data['role'], 'web');
                 $user->syncRoles([$data['role']]);
             }
 
@@ -55,8 +57,10 @@ class StaffService
 
     public function getStaffUsers()
     {
-        return User::role(['admin', 'service_advisor', 'mechanic'])
-            ->with('roles')
+        return User::with('roles')
+            ->whereHas('roles', function ($query) {
+                $query->whereIn('name', ['admin', 'service_advisor', 'mechanic']);
+            })
             ->orderBy('created_at', 'desc')
             ->get();
     }

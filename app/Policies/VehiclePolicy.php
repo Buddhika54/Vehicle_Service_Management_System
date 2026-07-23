@@ -12,7 +12,7 @@ class VehiclePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'service_advisor']);
+        return $user->hasAnyRole(['admin', 'service_advisor', 'customer']);
     }
 
     /**
@@ -20,6 +20,10 @@ class VehiclePolicy
      */
     public function view(User $user, Vehicle $vehicle): bool
     {
+        if ($user->hasRole('customer')) {
+            return $user->customer !== null && $vehicle->customer_id === $user->customer->id;
+        }
+
         return $user->hasAnyRole(['admin', 'service_advisor']);
     }
 
@@ -28,7 +32,7 @@ class VehiclePolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'service_advisor']);
+        return $user->hasAnyRole(['admin', 'service_advisor', 'customer']);
     }
 
     /**
@@ -36,6 +40,10 @@ class VehiclePolicy
      */
     public function update(User $user, Vehicle $vehicle): bool
     {
+        if ($user->hasRole('customer')) {
+            return false;
+        }
+
         return $user->hasAnyRole(['admin', 'service_advisor']);
     }
 
@@ -44,6 +52,10 @@ class VehiclePolicy
      */
     public function delete(User $user, Vehicle $vehicle): bool
     {
+        if ($user->hasRole('customer')) {
+            return false;
+        }
+
         return $user->hasAnyRole(['admin', 'service_advisor']);
     }
 }

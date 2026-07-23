@@ -2,8 +2,7 @@
 
 namespace App\Models;
 
-use Database\Factories\CustomerFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Database\Factories\MechanicFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,31 +12,28 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int|null $user_id
+ * @property string $employee_id
  * @property string $name
- * @property string $email
- * @property string $phone
- * @property string|null $address
- * @property string|null $notes
+ * @property string|null $specialization
+ * @property string $contact
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['user_id', 'name', 'email', 'phone', 'address', 'notes'])]
-class Customer extends Model
+class Mechanic extends Model
 {
-    /** @use HasFactory<CustomerFactory> */
+    /** @use HasFactory<MechanicFactory> */
     use HasFactory;
 
     protected $fillable = [
         'user_id',
+        'employee_id',
         'name',
-        'email',
-        'phone',
-        'address',
-        'notes',
+        'specialization',
+        'contact',
     ];
 
     /**
-     * Get the user linked to the customer.
+     * Get the user account linked to this mechanic (optional).
      *
      * @return BelongsTo<User, $this>
      */
@@ -47,17 +43,7 @@ class Customer extends Model
     }
 
     /**
-     * Get the vehicles for the customer.
-     *
-     * @return HasMany<Vehicle, $this>
-     */
-    public function vehicles(): HasMany
-    {
-        return $this->hasMany(Vehicle::class);
-    }
-
-    /**
-     * Get the bookings for the customer.
+     * Get the bookings assigned to this mechanic.
      *
      * @return HasMany<Booking, $this>
      */
