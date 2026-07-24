@@ -6,6 +6,7 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { update as updateVehicle } from '@/routes/vehicles';
 
 export default function VehiclesIndex({ vehicles, customers, selectedCustomer, filters }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -88,7 +89,7 @@ export default function VehiclesIndex({ vehicles, customers, selectedCustomer, f
     const handleSubmit = (e) => {
         e.preventDefault();
         if (editingVehicle) {
-            form.put(route('vehicles.update', editingVehicle.id), {
+            form.put(updateVehicle.url(editingVehicle), {
                 onSuccess: () => closeModal(),
             });
         } else {

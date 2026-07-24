@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { attachParts as attachBookingParts } from '@/routes/bookings';
 import { useState } from 'react';
 
 const statusBadge = {
@@ -23,6 +24,8 @@ export default function BookingsIndex({ bookings, mechanics, parts, filters }) {
     const [assigningId, setAssigningId] = useState(null);
     const [partsBookingId, setPartsBookingId] = useState(null);
     const [partsList, setPartsList] = useState([{ part_id: '', quantity: 1 }]);
+    const [partsError, setPartsError] = useState('');
+    const [isAttaching, setIsAttaching] = useState(false);
     const [selectedMechanic, setSelectedMechanic] = useState('');
 
     const switchTab = (tab) => {
@@ -58,16 +61,34 @@ export default function BookingsIndex({ bookings, mechanics, parts, filters }) {
 
     const submitParts = (booking) => {
         const validParts = partsList.filter((p) => p.part_id && p.quantity > 0);
-        if (validParts.length === 0) return;
+        if (!booking) {
+            setPartsError('The selected booking could not be found. Please reopen the dialog.');
+
+            return;
+        }
+
+        if (validParts.length === 0) {
+            setPartsError('Select at least one part and enter a quantity of 1 or more.');
+
+            return;
+        }
 
         router.post(
-            route('bookings.attach-parts', booking.id),
+            attachBookingParts(booking),
             { parts: validParts },
             {
+                onStart: () => {
+                    setIsAttaching(true);
+                    setPartsError('');
+                },
                 onSuccess: () => {
                     setPartsBookingId(null);
                     setPartsList([{ part_id: '', quantity: 1 }]);
                 },
+                onError: (errors) => {
+                    setPartsError(errors.parts || 'Unable to attach parts. Please review the selected parts and try again.');
+                },
+                onFinish: () => setIsAttaching(false),
             }
         );
     };
@@ -153,7 +174,13 @@ export default function BookingsIndex({ bookings, mechanics, parts, filters }) {
                                                 Assign
                                             </button>
                                         )}
-                                        <button onClick={() => setPartsBookingId(booking.id)} className="text-orange-600 hover:text-orange-800">
+                                        <button
+                                            onClick={() => {
+                                                setPartsBookingId(booking.id);
+                                                setPartsError('');
+                                            }}
+                                            className="text-orange-600 hover:text-orange-800"
+                                        >
                                             Parts
                                         </button>
                                         {booking.status === 'pending' && (
@@ -179,6 +206,9 @@ export default function BookingsIndex({ bookings, mechanics, parts, filters }) {
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                         <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
                             <h2 className="mb-4 text-lg font-semibold">Attach Parts</h2>
+                            {parts?.length === 0 && (
+                                <p className="mb-4 text-sm text-amber-700">No inventory parts are available to attach.</p>
+                            )}
                             {partsList.map((row, i) => (
                                 <div key={i} className="mb-2 flex gap-2">
                                     <select
@@ -209,6 +239,7 @@ export default function BookingsIndex({ bookings, mechanics, parts, filters }) {
                             >
                                 + Add another part
                             </button>
+                            {partsError && <p className="mb-4 text-sm text-red-600">{partsError}</p>}
                             <div className="flex justify-end gap-3">
                                 <button
                                     type="button"
@@ -223,8 +254,9 @@ export default function BookingsIndex({ bookings, mechanics, parts, filters }) {
                                         submitParts(bookings.data.find((booking) => booking.id === partsBookingId))
                                     }
                                     className="rounded-md bg-gradient-to-r from-yellow-400 to-orange-500 px-4 py-2 text-sm font-semibold text-white"
+                                    disabled={isAttaching || parts?.length === 0}
                                 >
-                                    Attach
+                                    {isAttaching ? 'Attaching...' : 'Attach'}
                                 </button>
                             </div>
                         </div>

@@ -189,17 +189,7 @@ class BookingService
                     $partsCost += $bp->quantity * $bp->unit_price;
                 }
 
-                $laborCost = self::LABOR_RATE_PER_HOUR * self::DEFAULT_LABOR_HOURS;
-                $total = $laborCost + $partsCost;
-
-                Invoice::create([
-                    'booking_id' => $booking->id,
-                    'invoice_number' => $this->generateInvoiceNumber(),
-                    'labor_cost' => $laborCost,
-                    'parts_cost' => $partsCost,
-                    'total' => $total,
-                    'payment_status' => 'pending',
-                ]);
+                $this->syncInvoice($booking);
             }
 
             $booking->update(['status' => $newStatus]);
@@ -222,6 +212,20 @@ class BookingService
             : 1;
 
         return sprintf('INV-%d-%04d', $year, $nextNumber);
+    }
+
+    private function syncInvoice(Booking $booking): Invoice
+    {
+        $partsCost = (float) $booking->bookingParts()->sum(DB::raw('quantity * unit_price'));
+        $laborCost = self::LABOR_RATE_PER_HOUR * self::DEFAULT_LABOR_HOURS;
+
+        return $booking->invoice()->updateOrCreate([], [
+            'invoice_number' => $booking->invoice?->invoice_number ?? $this->generateInvoiceNumber(),
+            'labor_cost' => $laborCost,
+            'parts_cost' => $partsCost,
+            'total' => $laborCost + $partsCost,
+            'payment_status' => 'pending',
+        ]);
     }
 
     /**
@@ -267,6 +271,8 @@ class BookingService
                     'unit_price' => $part->unit_price,
                 ]);
             }
+
+            $this->syncInvoice($booking);
 
             return $booking->fresh(['bookingParts.part']);
         });

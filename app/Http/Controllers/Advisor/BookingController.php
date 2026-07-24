@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Advisor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AttachPartsRequest;
 use App\Models\Booking;
 use App\Models\Part;
 use App\Services\BookingService;
@@ -79,16 +80,12 @@ class BookingController extends Controller
         return redirect()->back()->with('success', 'Booking status updated successfully.');
     }
 
-    public function attachParts(Request $request, \App\Models\Booking $booking)
+    public function attachParts(AttachPartsRequest $request, Booking $booking): RedirectResponse
     {
-        $request->validate([
-            'parts' => ['required', 'array', 'min:1'],
-            'parts.*.part_id' => ['required', 'exists:parts,id'],
-            'parts.*.quantity' => ['required', 'integer', 'min:1'],
-        ]);
+        Gate::authorize('update', $booking);
 
-        $this->bookingService->attachParts($booking, $request->parts);
+        $this->bookingService->attachParts($booking, $request->validated('parts'));
 
-        return back()->with('success', 'Parts attached.');
+        return back()->with('success', 'Parts attached and invoice updated.');
     }
 }

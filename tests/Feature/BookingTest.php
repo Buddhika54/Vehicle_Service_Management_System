@@ -2,6 +2,7 @@
 
 use App\Models\Booking;
 use App\Models\Customer;
+use App\Models\Part;
 use App\Models\User;
 use App\Models\Vehicle;
 use Spatie\Permission\Models\Role;
@@ -133,4 +134,47 @@ test('customer cannot cancel another customer booking', function () {
     $response = $this->actingAs($user1)->delete(route('customer.bookings.destroy', $booking));
 
     $response->assertStatus(403);
+});
+
+test('advisor can attach parts and create an invoice for a booking', function () {
+    $advisor = User::factory()->create();
+    $advisor->assignRole('service_advisor');
+
+    $customer = Customer::factory()->create();
+    $vehicle = Vehicle::factory()->create(['customer_id' => $customer->id]);
+    $booking = Booking::factory()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => 'in_progress',
+    ]);
+    $part = Part::factory()->create([
+        'unit_price' => 25.50,
+        'stock_quantity' => 10,
+    ]);
+
+    $response = $this->actingAs($advisor)
+        ->from(route('bookings.index'))
+        ->post(route('bookings.attach-parts', $booking), [
+            'parts' => [[
+                'part_id' => $part->id,
+                'quantity' => 2,
+            ]],
+        ]);
+
+    $response->assertRedirect(route('bookings.index'));
+    $response->assertSessionHasNoErrors();
+
+    $this->assertDatabaseHas('booking_parts', [
+        'booking_id' => $booking->id,
+        'part_id' => $part->id,
+        'quantity' => 2,
+        'unit_price' => 25.50,
+    ]);
+    $this->assertDatabaseHas('invoices', [
+        'booking_id' => $booking->id,
+        'labor_cost' => 75,
+        'parts_cost' => 51,
+        'total' => 126,
+        'payment_status' => 'pending',
+    ]);
 });
