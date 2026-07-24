@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\MechanicController as AdminMechanicController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\PartController;
+use App\Http\Controllers\Advisor\InvoiceController;
 use App\Http\Controllers\Advisor\BookingController as AdvisorBookingController;
 use App\Http\Controllers\Advisor\CustomerController;
 use App\Http\Controllers\Advisor\VehicleController;
@@ -95,18 +97,40 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/customers/{customer}/vehicles', [VehicleController::class, 'index'])
             ->name('customers.vehicles.index');
         Route::resource('vehicles', VehicleController::class);
-        Route::get('/bookings', fn () => Inertia::render('Advisor/Bookings/Index'))
+        Route::get('/bookings', [AdvisorBookingController::class, 'index'])
             ->name('bookings.index');
+        Route::get('/bookings/{booking}', [AdvisorBookingController::class, 'show'])
+            ->name('bookings.show');
+        Route::get('/bookings/{booking}/edit', [AdvisorBookingController::class, 'edit'])
+            ->name('bookings.edit');
+        Route::put('/bookings/{booking}', [AdvisorBookingController::class, 'update'])
+            ->name('bookings.update');
+        Route::delete('/bookings/{booking}', [AdvisorBookingController::class, 'destroy'])
+            ->name('bookings.destroy');
+        Route::get('/bookings/{booking}/assign-mechanic', [AdvisorBookingController::class, 'showAssignMechanicForm'])
+            ->name('bookings.assign-mechanic.form');
+        Route::get('/bookings/{booking}/update-status', [AdvisorBookingController::class, 'showUpdateStatusForm'])
+            ->name('bookings.update-status.form');
         Route::post('/bookings/{booking}/assign-mechanic', [AdvisorBookingController::class, 'assignMechanic'])
             ->name('bookings.assign-mechanic');
         Route::patch('/bookings/{booking}/update-status', [AdvisorBookingController::class, 'updateStatus'])
             ->name('bookings.update-status');
+        Route::post('/bookings/{booking}/attach-parts', [AdvisorBookingController::class, 'attachParts'])->name('bookings.attach-parts');
+        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::patch('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.mark-paid');
+
     });
 
     // Admin-only routes
     Route::middleware(['role:admin'])->group(function () {
-        Route::get('/mechanics', fn () => Inertia::render('Admin/Mechanics/Index'))
+        Route::get('/mechanics', [AdminMechanicController::class, 'index'])
             ->name('mechanics.index');
+        Route::post('/mechanics', [AdminMechanicController::class, 'store'])
+            ->name('mechanics.store');
+        Route::put('/mechanics/{mechanic}', [AdminMechanicController::class, 'update'])
+            ->name('mechanics.update');
+        Route::delete('/mechanics/{mechanic}', [AdminMechanicController::class, 'destroy'])
+            ->name('mechanics.destroy');
         Route::get('/parts', fn () => Inertia::render('Admin/Parts/Index'))
             ->name('parts.index');
         Route::get('/admin/staff', [StaffController::class, 'index'])
@@ -117,12 +141,18 @@ Route::middleware(['auth'])->group(function () {
             ->name('admin.staff.update');
         Route::delete('/admin/staff/{user}', [StaffController::class, 'destroy'])
             ->name('admin.staff.destroy');
+        Route::get('/parts', [PartController::class, 'index'])->name('parts.index');
+        Route::post('/parts', [PartController::class, 'store'])->name('parts.store');
+        Route::put('/parts/{part}', [PartController::class, 'update'])->name('parts.update');
+        Route::delete('/parts/{part}', [PartController::class, 'destroy'])->name('parts.destroy');
     });
 
     // Mechanic-only routes
     Route::middleware(['role:mechanic'])->group(function () {
-        Route::get('/my-jobs', fn () => Inertia::render('Mechanic/Jobs/Index'))
+        Route::get('/my-jobs', [MechanicJobController::class, 'index'])
             ->name('jobs.index');
+        Route::get('/my-jobs/{booking}', [MechanicJobController::class, 'show'])
+            ->name('jobs.show');
         Route::patch('/my-jobs/{booking}/update-status', [MechanicJobController::class, 'updateStatus'])
             ->name('jobs.update-status');
     });

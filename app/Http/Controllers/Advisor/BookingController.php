@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Advisor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Part;
 use App\Services\BookingService;
 use App\Services\MechanicService;
 use Illuminate\Http\RedirectResponse;
@@ -33,10 +34,15 @@ class BookingController extends Controller
 
         $bookings = $this->bookingService->getPaginatedBookings($filters);
         $mechanics = $this->mechanicService->getAllMechanics();
+        $parts = Part::query()
+            ->select(['id', 'name', 'unit_price'])
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Advisor/Bookings/Index', [
             'bookings' => $bookings,
             'mechanics' => $mechanics,
+            'parts' => $parts,
             'filters' => $filters,
         ]);
     }
@@ -71,5 +77,18 @@ class BookingController extends Controller
         $this->bookingService->updateStatus($booking, $validated['status']);
 
         return redirect()->back()->with('success', 'Booking status updated successfully.');
+    }
+
+    public function attachParts(Request $request, \App\Models\Booking $booking)
+    {
+        $request->validate([
+            'parts' => ['required', 'array', 'min:1'],
+            'parts.*.part_id' => ['required', 'exists:parts,id'],
+            'parts.*.quantity' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $this->bookingService->attachParts($booking, $request->parts);
+
+        return back()->with('success', 'Parts attached.');
     }
 }

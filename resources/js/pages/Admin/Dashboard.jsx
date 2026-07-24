@@ -104,6 +104,24 @@ export default function AdminDashboard({ stats }) {
                             </svg>
                             <span className="text-sm font-medium text-gray-700">Manage Staff</span>
                         </Link>
+                        <Link
+                            href={route('mechanics.index')}
+                            className="flex flex-col items-center p-4 rounded-lg border border-gray-200 hover:border-orange-400 hover:bg-orange-50 transition-colors"
+                        >
+                            <svg className="w-8 h-8 text-orange-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            <span className="text-sm font-medium text-gray-700">Manage Mechanics</span>
+                        </Link>
+                        <Link
+                            href={route('parts.index')}
+                            className="flex flex-col items-center p-4 rounded-lg border border-gray-200 hover:border-orange-400 hover:bg-orange-50 transition-colors"
+                        >
+                            <svg className="w-8 h-8 text-orange-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            <span className="text-sm font-medium text-gray-700">Manage Parts</span>
+                        </Link>
                     </div>
                 </div>
             </div>

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Mechanic;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -19,6 +20,11 @@ class StaffService
 
             Role::findOrCreate($data['role'], 'web');
             $user->assignRole($data['role']);
+
+            if ($data['role'] === 'mechanic') {
+                $this->ensureMechanicRecord($user);
+            }
+
 
             return $user;
         });
@@ -41,6 +47,10 @@ class StaffService
             if (isset($data['role'])) {
                 Role::findOrCreate($data['role'], 'web');
                 $user->syncRoles([$data['role']]);
+
+                if ($data['role'] === 'mechanic') {
+                    $this->ensureMechanicRecord($user);
+                }
             }
 
             return $user;
@@ -50,6 +60,7 @@ class StaffService
     public function deleteStaff(User $user): void
     {
         DB::transaction(function () use ($user) {
+            $user->mechanic()->delete();
             $user->syncRoles([]);
             $user->delete();
         });
@@ -63,5 +74,20 @@ class StaffService
             })
             ->orderBy('created_at', 'desc')
             ->get();
+    }
+
+    protected function ensureMechanicRecord(User $user): void
+    {
+        if ($user->mechanic) {
+            return;
+        }
+
+        Mechanic::create([
+            'user_id' => $user->id,
+            'employee_id' => 'EMP-' . strtoupper(uniqid()),
+            'name' => $user->name,
+            'specialization' => null,
+            'contact' => 'Not provided',
+        ]);
     }
 }

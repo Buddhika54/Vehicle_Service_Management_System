@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -76,4 +78,25 @@ class Booking extends Model
     {
         return $this->belongsTo(Mechanic::class);
     }
+
+    /**
+     * Get the parts associated with the booking.
+     *
+     * @return HasMany<BookingPart>
+     */
+    public function bookingParts(): HasMany
+    {
+        return $this->hasMany(BookingPart::class);      
+    }
+
+    /**
+     * Get the invoice associated with the booking.
+     *
+     * @return HasOne<Invoice>
+     */
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
 }

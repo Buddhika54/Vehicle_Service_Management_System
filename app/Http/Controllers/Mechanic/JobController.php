@@ -35,7 +35,7 @@ class JobController extends Controller
             : new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
 
         return Inertia::render('Mechanic/Jobs/Index', [
-            'jobs' => $jobs,
+            'bookings' => $jobs,
             'mechanic' => $mechanic,
         ]);
     }

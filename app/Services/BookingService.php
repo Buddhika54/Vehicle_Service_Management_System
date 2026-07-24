@@ -3,6 +3,9 @@
 namespace App\Services;
 
 use App\Models\Booking;
+use App\Models\BookingPart;
+use App\Models\Invoice;
+use App\Models\Part;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -168,12 +171,57 @@ class BookingService
         }
 
         return DB::transaction(function () use ($booking, $newStatus) {
+            if ($newStatus === 'completed') {
+                $bookingParts = $booking->bookingParts()->with('part')->get();
+
+                $partsCost = 0;
+
+                foreach ($bookingParts as $bp) {
+                    $part = Part::lockForUpdate()->findOrFail($bp->part_id);
+
+                    if ($part->stock_quantity < $bp->quantity) {
+                        throw ValidationException::withMessages([
+                            'stock' => "Not enough stock for {$part->name} to complete this job.",
+                        ]);
+                    }
+
+                    $part->decrement('stock_quantity', $bp->quantity);
+                    $partsCost += $bp->quantity * $bp->unit_price;
+                }
+
+                $laborCost = self::LABOR_RATE_PER_HOUR * self::DEFAULT_LABOR_HOURS;
+                $total = $laborCost + $partsCost;
+
+                Invoice::create([
+                    'booking_id' => $booking->id,
+                    'invoice_number' => $this->generateInvoiceNumber(),
+                    'labor_cost' => $laborCost,
+                    'parts_cost' => $partsCost,
+                    'total' => $total,
+                    'payment_status' => 'pending',
+                ]);
+            }
+
             $booking->update(['status' => $newStatus]);
 
             // Day 5 hook: when status transitions to 'completed', stock deduction will go here.
 
-            return $booking->fresh();
+            return $booking->fresh(['invoice']);
         });
+    }
+
+    protected function generateInvoiceNumber(): string
+    {
+        $year = now()->year;
+        $lastInvoice = Invoice::where('invoice_number', 'like', "INV-{$year}-%")
+            ->orderByDesc('invoice_number')
+            ->first();
+
+        $nextNumber = $lastInvoice
+            ? ((int) substr($lastInvoice->invoice_number, -4)) + 1
+            : 1;
+
+        return sprintf('INV-%d-%04d', $year, $nextNumber);
     }
 
     /**
@@ -197,4 +245,31 @@ class BookingService
             return $booking;
         });
     }
+    const LABOR_RATE_PER_HOUR = 50;
+    const DEFAULT_LABOR_HOURS = 1.5;
+
+    public function attachParts(Booking $booking, array $parts): Booking
+    {
+        return DB::transaction(function () use ($booking, $parts) {
+            foreach ($parts as $item) {
+                $part = Part::lockForUpdate()->findOrFail($item['part_id']);
+
+                if ($part->stock_quantity < $item['quantity']) {
+                    throw ValidationException::withMessages([
+                        'parts' => "Not enough stock for {$part->name}. Available: {$part->stock_quantity}.",
+                    ]);
+                }
+
+                BookingPart::create([
+                    'booking_id' => $booking->id,
+                    'part_id' => $part->id,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $part->unit_price,
+                ]);
+            }
+
+            return $booking->fresh(['bookingParts.part']);
+        });
+    }
+
 }
