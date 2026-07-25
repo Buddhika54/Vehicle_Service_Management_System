@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-\App\Models\Part::factory(20)->create();
+
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
@@ -12,6 +12,8 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             UserSeeder::class,
             CustomerSeeder::class,
+            ServiceSeeder::class,
+            PartSeeder::class,
         ]);
     }
 }

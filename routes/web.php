@@ -1,17 +1,20 @@
 <?php
 
 use App\Http\Controllers\Admin\MechanicController as AdminMechanicController;
-use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\PartController;
-use App\Http\Controllers\Advisor\InvoiceController;
+use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Advisor\BookingController as AdvisorBookingController;
+use App\Http\Controllers\Advisor\CostEstimatorController;
 use App\Http\Controllers\Advisor\CustomerController;
+use App\Http\Controllers\Advisor\InvoiceController;
 use App\Http\Controllers\Advisor\VehicleController;
 use App\Http\Controllers\Customer\BookingController as CustomerBookingController;
 use App\Http\Controllers\Customer\VehicleController as CustomerVehicleController;
 use App\Http\Controllers\Mechanic\JobController as MechanicJobController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Booking;
 use App\Models\Customer;
+use App\Models\Mechanic;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Support\Facades\Route;
@@ -75,7 +78,26 @@ Route::middleware(['auth'])->group(function () {
         }
 
         if ($user->hasRole('mechanic')) {
-            return Inertia::render('Mechanic/Dashboard');
+            $mechanic = Mechanic::where('user_id', $user->id)->first();
+            if (! $mechanic) {
+                $mechanic = Mechanic::where('name', $user->name)->first();
+                if ($mechanic && ! $mechanic->user_id) {
+                    $mechanic->update(['user_id' => $user->id]);
+                }
+            }
+
+            $jobs = $mechanic
+                ? Booking::where('mechanic_id', $mechanic->id)
+                    ->with(['customer', 'vehicle'])
+                    ->orderBy('scheduled_at', 'desc')
+                    ->take(10)
+                    ->get()
+                : [];
+
+            return Inertia::render('Mechanic/Dashboard', [
+                'jobs' => $jobs,
+                'mechanic' => $mechanic,
+            ]);
         }
 
         return Inertia::render('Dashboard');
@@ -118,7 +140,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bookings/{booking}/attach-parts', [AdvisorBookingController::class, 'attachParts'])->name('bookings.attach-parts');
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::patch('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.mark-paid');
-
+        Route::get('/cost-estimator', [CostEstimatorController::class, 'index'])->name('cost-estimator.index');
+        Route::post('/cost-estimator', [CostEstimatorController::class, 'estimate'])->name('cost-estimator.estimate');
     });
 
     // Admin-only routes
