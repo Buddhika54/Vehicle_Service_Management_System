@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Gate;
 
 class InvoiceController extends Controller
 {
@@ -22,7 +23,7 @@ class InvoiceController extends Controller
 
     public function markAsPaid(Invoice $invoice)
     {
-        $this->authorize('update', $invoice);
+        Gate::authorize('update', $invoice);
         $this->invoiceService->markAsPaid($invoice);
         return back()->with('success', 'Invoice marked as paid.');
     }
