@@ -3,6 +3,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
+import PublicLayout from '@/Layouts/PublicLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Login({ status, canResetPassword }) {
@@ -21,6 +22,7 @@ export default function Login({ status, canResetPassword }) {
     };
 
     return (
+        <PublicLayout>
         <div className="bg-[#FFF8E7]" >
         <GuestLayout>
             
@@ -126,5 +128,6 @@ export default function Login({ status, canResetPassword }) {
             
         </GuestLayout>
         </div>
+        </PublicLayout>
     );
 }

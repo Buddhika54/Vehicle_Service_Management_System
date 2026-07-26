@@ -12,6 +12,9 @@ use App\Http\Controllers\Customer\BookingController as CustomerBookingController
 use App\Http\Controllers\Customer\VehicleController as CustomerVehicleController;
 use App\Http\Controllers\Mechanic\JobController as MechanicJobController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicController;
+use App\Http\Controllers\PublicPartController;
+use App\Http\Controllers\PublicServiceController;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Mechanic;
@@ -20,7 +23,12 @@ use App\Models\Vehicle;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', fn () => Inertia::render('Auth/Login'));
+// Public routes (no authentication required)
+Route::get('/', [PublicController::class, 'home'])->name('home');
+Route::get('/services', [PublicServiceController::class, 'index'])->name('services');
+Route::get('/parts-pricing', [PublicPartController::class, 'index'])->name('parts-pricing');
+Route::get('/contact', [PublicController::class, 'contact'])->name('contact');
+Route::get('/about', [PublicController::class, 'about'])->name('about');
 
 Route::middleware(['auth'])->group(function () {
 
