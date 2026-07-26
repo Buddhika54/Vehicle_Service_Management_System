@@ -88,7 +88,7 @@ class BookingService
     public function getBookingsForCustomer(int $customerId, int $perPage = 10): LengthAwarePaginator
     {
         return Booking::where('customer_id', $customerId)
-            ->with(['vehicle', 'mechanic'])
+            ->with(['vehicle', 'mechanic', 'invoice'])
             ->orderBy('scheduled_at', 'desc')
             ->paginate($perPage)
             ->withQueryString();
@@ -103,14 +103,13 @@ class BookingService
     public function getPaginatedBookings(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         return Booking::query()
-            ->with(['customer', 'vehicle', 'mechanic'])
+            ->with(['customer', 'vehicle', 'mechanic', 'invoice'])
             ->when($filters['status'] ?? null, function ($query, $status) {
                 $query->where('status', $status);
             })
             ->when($filters['date'] ?? null, function ($query, $date) {
                 $query->whereDate('scheduled_at', $date);
             })
-            ->with(['customer', 'vehicle', 'mechanic'])
             ->orderBy('scheduled_at', 'desc')
             ->paginate($perPage)
             ->withQueryString();
@@ -249,7 +248,9 @@ class BookingService
             return $booking;
         });
     }
+
     const LABOR_RATE_PER_HOUR = 50;
+
     const DEFAULT_LABOR_HOURS = 1.5;
 
     public function attachParts(Booking $booking, array $parts): Booking
@@ -277,5 +278,4 @@ class BookingService
             return $booking->fresh(['bookingParts.part']);
         });
     }
-
 }

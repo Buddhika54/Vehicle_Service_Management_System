@@ -21,4 +21,13 @@ class InvoicePolicy
     {
         return $user->hasAnyRole(['admin', 'service_advisor']);
     }
+
+    public function download(User $user, Invoice $invoice): bool
+    {
+        if ($user->hasAnyRole(['admin', 'service_advisor'])) {
+            return true;
+        }
+
+        return $invoice->booking->customer->user_id === $user->id;
+    }
 }

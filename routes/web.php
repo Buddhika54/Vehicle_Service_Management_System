@@ -178,6 +178,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/cost-estimator', [CostEstimatorController::class, 'estimate'])->name('cost-estimator.estimate');
     });
 
+    // Invoice download - accessible to customers and admin/advisor via policy
+    Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
+
     // Admin-only routes
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/mechanics', [AdminMechanicController::class, 'index'])

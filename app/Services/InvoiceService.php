@@ -21,7 +21,18 @@ class InvoiceService
     {
         return DB::transaction(function () use ($invoice) {
             $invoice->update(['payment_status' => 'paid']);
+
             return $invoice;
         });
+    }
+
+    public function getInvoiceForPdf(Invoice $invoice): Invoice
+    {
+        return Invoice::with([
+            'booking.customer',
+            'booking.vehicle',
+            'booking.mechanic',
+            'booking.bookingParts.part',
+        ])->find($invoice->id);
     }
 }
