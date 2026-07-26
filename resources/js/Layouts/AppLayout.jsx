@@ -66,7 +66,7 @@ export default function AppLayout({ children }) {
                             </svg>
                         </div>
                         <div>
-                            <h2 className="text-base font-bold text-gray-800 leading-tight">Vehicle Service</h2>
+                            <h2 className="text-base font-bold text-gray-800 leading-tight">Garage-Plus</h2>
                             <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full inline-block mt-0.5">
                                 {getRoleLabel()}
                             </span>
@@ -199,4 +199,4 @@ export default function AppLayout({ children }) {
             <main className="flex-1 p-6 overflow-y-auto">{children}</main>
         </div>
     );
-}
+}

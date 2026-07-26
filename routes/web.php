@@ -17,7 +17,9 @@ use App\Http\Controllers\PublicPartController;
 use App\Http\Controllers\PublicServiceController;
 use App\Models\Booking;
 use App\Models\Customer;
+use App\Models\Invoice;
 use App\Models\Mechanic;
+use App\Models\Part;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Support\Facades\Route;
@@ -67,20 +69,44 @@ Route::middleware(['auth'])->group(function () {
         }
 
         if ($user->hasRole('admin')) {
+            $today = now()->startOfDay();
+            $lowStockParts = Part::whereColumn('stock_quantity', '<=', 'low_stock_threshold')->get(['id', 'name', 'stock_quantity', 'low_stock_threshold']);
+
             return Inertia::render('Admin/Dashboard', [
                 'stats' => [
                     'totalCustomers' => Customer::count(),
                     'totalVehicles' => Vehicle::count(),
                     'totalStaff' => User::role(['admin', 'service_advisor', 'mechanic'])->count(),
+                    'todaysBookings' => Booking::whereDate('scheduled_at', $today)->count(),
+                    'activeJobs' => Booking::where('status', 'in_progress')->count(),
+                    'lowStockParts' => [
+                        'count' => $lowStockParts->count(),
+                        'parts' => $lowStockParts,
+                    ],
+                    'dailyRevenue' => Invoice::whereDate('created_at', $today)
+                        ->where('payment_status', 'paid')
+                        ->sum('total'),
                 ],
             ]);
         }
 
         if ($user->hasRole('service_advisor')) {
+            $today = now()->startOfDay();
+            $lowStockParts = Part::whereColumn('stock_quantity', '<=', 'low_stock_threshold')->get(['id', 'name', 'stock_quantity', 'low_stock_threshold']);
+
             return Inertia::render('Advisor/Dashboard', [
                 'stats' => [
                     'totalCustomers' => Customer::count(),
                     'totalVehicles' => Vehicle::count(),
+                    'todaysBookings' => Booking::whereDate('scheduled_at', $today)->count(),
+                    'activeJobs' => Booking::where('status', 'in_progress')->count(),
+                    'lowStockParts' => [
+                        'count' => $lowStockParts->count(),
+                        'parts' => $lowStockParts,
+                    ],
+                    'dailyRevenue' => Invoice::whereDate('created_at', $today)
+                        ->where('payment_status', 'paid')
+                        ->sum('total'),
                 ],
             ]);
         }
